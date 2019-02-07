@@ -1,0 +1,44 @@
+  # Javascript Node CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+#
+version: 2
+jobs:
+  prepare:
+    docker:
+      - image: circleci/node:11.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - client-{{ checksum "package.json" }}
+          - client-
+      - run:
+          name: Install client packages
+          command: cd client && yarn install
+      - save_cache:
+          paths:
+            - client/node_modules
+          key: client-{{ checksum "package.json" }}
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+  test:
+    docker:
+      - image: circleci/node:11.8.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Running tests
+          command: cd client && yarn lint
+workflows:
+  version: 2
+  build:
+    jobs:
+      - prepare
+      - test:
+          requires:
+          - prepare
